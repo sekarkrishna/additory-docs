@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>add.to() - Additory Documentation</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-code: #f5f5f5;
+            --text-primary: #2c3e50;
+            --text-secondary: #5a6c7d;
+            --border-color: #e1e4e8;
+            --accent-color: #3498db;
+            --accent-hover: #2980b9;
+            --success-color: #27ae60;
+            --code-text: #24292e;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #252526;
+            --bg-code: #2d2d30;
+            --text-primary: #e4e4e4;
+            --text-secondary: #a0a0a0;
+            --border-color: #3e3e42;
+            --accent-color: #4a9eff;
+            --accent-hover: #6bb3ff;
+            --success-color: #4ec9b0;
+            --code-text: #d4d4d4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            padding: 20px 0;
+            margin-bottom: 40px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: var(--text-primary);
+            font-size: 1.8em;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        h3 {
+            color: var(--text-primary);
+            font-size: 1.3em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.2em;
+        }
+
+        .theme-toggle {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .intro {
+            background-color: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .intro p {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .parameter-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .parameter-table th,
+        .parameter-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .parameter-table th {
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .parameter-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .param-name {
+            font-family: 'Courier New', monospace;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .param-type {
+            font-family: 'Courier New', monospace;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .code-block {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .code-header {
+            background-color: var(--bg-secondary);
+            padding: 10px 15px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+        }
+
+        .code-title {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .copy-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background-color 0.3s;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .copy-btn.copied {
+            background-color: var(--success-color);
+        }
+
+        pre {
+            background-color: var(--bg-code);
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            margin: 0;
+        }
+
+        code {
+            font-family: 'Courier New', Consolas, Monaco, monospace;
+            color: var(--code-text);
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .example-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .note {
+            background-color: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .note strong {
+            color: var(--accent-color);
+        }
+
+        ul {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin: 8px 0;
+        }
+
+        .toc {
+            background-color: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .toc li {
+            margin: 10px 0;
+        }
+
+        .toc a {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .toc a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <h1>add.to()</h1>
+                <p class="subtitle">Add columns from one dataframe to another</p>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="intro">
+            <p><strong>What does add.to() do?</strong></p>
+            <p>The <code>add.to()</code> function lets you bring columns from one dataframe (the reference) into another dataframe (the target) by matching on common columns. Think of it like a lookup or join operation, but with simpler syntax.</p>
+            <p><strong>Common use cases:</strong></p>
+            <ul>
+                <li>Adding product prices to an orders dataframe</li>
+                <li>Bringing customer information into a transactions dataframe</li>
+                <li>Enriching data with reference information from another table</li>
+            </ul>
+        </div>
+
+        <div class="toc">
+            <h3>📋 Table of Contents</h3>
+            <ul>
+                <li><a href="#parameters">Parameters</a></li>
+                <li><a href="#example1">Example 1: Simplest Usage</a></li>
+                <li><a href="#example2">Example 2: Bringing Multiple Columns</a></li>
+                <li><a href="#example3">Example 3: Matching on Multiple Columns</a></li>
+                <li><a href="#example4">Example 4: Real-World Scenario</a></li>
+            </ul>
+        </div>
+
+        <h2 id="parameters">📖 Parameters</h2>
+        <table class="parameter-table">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="param-name">target_df</span></td>
+                    <td><span class="param-type">DataFrame</span></td>
+                    <td>✅ Yes</td>
+                    <td>The dataframe you want to add columns to (your main dataframe)</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">from_df</span></td>
+                    <td><span class="param-type">DataFrame</span></td>
+                    <td>✅ Yes</td>
+                    <td>The reference dataframe containing the columns you want to bring over</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">bring</span></td>
+                    <td><span class="param-type">str or list</span></td>
+                    <td>✅ Yes</td>
+                    <td>The column name(s) you want to bring from the reference dataframe. Can be a single column name (string) or multiple columns (list)</td>
+                </tr>
+                <tr>
+                    <td><span class="param-name">against</span></td>
+                    <td><span class="param-type">str or list</span></td>
+                    <td>✅ Yes</td>
+                    <td>The column name(s) to match on (the common columns between both dataframes). Can be a single column name (string) or multiple columns (list)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="note">
+            <strong>💡 Note:</strong> The function works with both pandas and polars dataframes. It will automatically detect the type and return the same type.
+        </div>
+
+        <h2 id="example1">🚀 Example 1: Simplest Usage</h2>
+        <div class="example-section">
+            <p><strong>Scenario:</strong> You have an orders dataframe and want to add product prices from a products dataframe.</p>
+            
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Setup: Create sample data</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code>import pandas as pd
+import additory as add
+
+# Your orders dataframe
+orders = pd.DataFrame({
+    'order_id': [1, 2, 3],
+    'product_id': ['A', 'B', 'A'],
+    'quantity': [2, 1, 3]
+})
+
+# Reference products dataframe
+products = pd.DataFrame({
+    'product_id': ['A', 'B', 'C'],
+    'price': [10.99, 25.50, 15.00]
+})</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Add prices to orders</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code># Bring the 'price' column from products, matching on 'product_id'
+result = add.to(
+    orders,
+    from_df=products,
+    bring='price',
+    against='product_id'
+)
+
+print(result)</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Output</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code>   order_id product_id  quantity  price
+0         1          A         2  10.99
+1         2          B         1  25.50
+2         3          A         3  10.99</code></pre>
+            </div>
+        </div>
+
+        <h2 id="example2">📦 Example 2: Bringing Multiple Columns</h2>
+        <div class="example-section">
+            <p><strong>Scenario:</strong> You want to bring multiple columns at once (price AND product name).</p>
+            
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Setup: Enhanced products data</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code>import pandas as pd
+import additory as add
+
+orders = pd.DataFrame({
+    'order_id': [1, 2, 3],
+    'product_id': ['A', 'B', 'A'],
+    'quantity': [2, 1, 3]
+})
+
+products = pd.DataFrame({
+    'product_id': ['A', 'B', 'C'],
+    'product_name': ['Widget', 'Gadget', 'Doohickey'],
+    'price': [10.99, 25.50, 15.00],
+    'category': ['Tools', 'Electronics', 'Tools']
+})</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Bring multiple columns using a list</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code># Bring both 'product_name' and 'price' columns
+result = add.to(
+    orders,
+    from_df=products,
+    bring=['product_name', 'price'],  # List of columns
+    against='product_id'
+)
+
+print(result)</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Output</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code>   order_id product_id  quantity product_name  price
+0         1          A         2       Widget  10.99
+1         2          B         1       Gadget  25.50
+2         3          A         3       Widget  10.99</code></pre>
+            </div>
+        </div>
+
+        <h2 id="example3">🔗 Example 3: Matching on Multiple Columns</h2>
+        <div class="example-section">
+            <p><strong>Scenario:</strong> You need to match on more than one column (e.g., product_id AND region).</p>
+            
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Setup: Regional pricing data</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code>import pandas as pd
+import additory as add
+
+# Orders with region information
+orders = pd.DataFrame({
+    'order_id': [1, 2, 3, 4],
+    'product_id': ['A', 'B', 'A', 'B'],
+    'region': ['US', 'US', 'EU', 'EU'],
+    'quantity': [2, 1, 3, 2]
+})
+
+# Products with regional pricing
+products = pd.DataFrame({
+    'product_id': ['A', 'A', 'B', 'B'],
+    'region': ['US', 'EU', 'US', 'EU'],
+    'price': [10.99, 12.50, 25.50, 28.00]
+})</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Match on both product_id AND region</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code># Match on multiple columns using a list
+result = add.to(
+    orders,
+    from_df=products,
+    bring='price',
+    against=['product_id', 'region']  # List of matching columns
+)
+
+print(result)</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Output</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code>   order_id product_id region  quantity  price
+0         1          A     US         2  10.99
+1         2          B     US         1  25.50
+2         3          A     EU         3  12.50
+3         4          B     EU         2  28.00</code></pre>
+            </div>
+        </div>
+
+        <h2 id="example4">🌟 Example 4: Real-World Scenario</h2>
+        <div class="example-section">
+            <p><strong>Scenario:</strong> E-commerce order processing - bringing customer details and product information into orders.</p>
+            
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Setup: Complete e-commerce data</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code>import pandas as pd
+import additory as add
+
+# Orders dataframe
+orders = pd.DataFrame({
+    'order_id': [1001, 1002, 1003, 1004],
+    'customer_id': [501, 502, 501, 503],
+    'product_id': ['WIDGET-A', 'GADGET-B', 'WIDGET-A', 'TOOL-C'],
+    'quantity': [2, 1, 5, 3],
+    'order_date': ['2024-01-15', '2024-01-16', '2024-01-16', '2024-01-17']
+})
+
+# Customer information
+customers = pd.DataFrame({
+    'customer_id': [501, 502, 503],
+    'customer_name': ['Alice Johnson', 'Bob Smith', 'Carol White'],
+    'email': ['alice@email.com', 'bob@email.com', 'carol@email.com'],
+    'tier': ['Gold', 'Silver', 'Gold']
+})
+
+# Product catalog
+products = pd.DataFrame({
+    'product_id': ['WIDGET-A', 'GADGET-B', 'TOOL-C'],
+    'product_name': ['Premium Widget', 'Smart Gadget', 'Pro Tool'],
+    'price': [29.99, 149.99, 79.99],
+    'category': ['Widgets', 'Electronics', 'Tools']
+})</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Step 1: Add customer information</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code># First, bring customer details
+orders_with_customers = add.to(
+    orders,
+    from_df=customers,
+    bring=['customer_name', 'tier'],
+    against='customer_id'
+)
+
+print("After adding customer info:")
+print(orders_with_customers)</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Step 2: Add product information</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code># Then, bring product details
+complete_orders = add.to(
+    orders_with_customers,
+    from_df=products,
+    bring=['product_name', 'price', 'category'],
+    against='product_id'
+)
+
+print("\nComplete orders with all information:")
+print(complete_orders)</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Step 3: Calculate order totals</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code># Now you can easily calculate totals
+complete_orders['order_total'] = complete_orders['quantity'] * complete_orders['price']
+
+print("\nFinal result with totals:")
+print(complete_orders)</code></pre>
+            </div>
+
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-title">Final Output</span>
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code>   order_id  customer_id   product_id  quantity  order_date   customer_name   tier    product_name   price     category  order_total
+0      1001          501   WIDGET-A         2  2024-01-15  Alice Johnson   Gold  Premium Widget   29.99      Widgets        59.98
+1      1002          502   GADGET-B         1  2024-01-16     Bob Smith Silver    Smart Gadget  149.99  Electronics       149.99
+2      1003          501   WIDGET-A         5  2024-01-16  Alice Johnson   Gold  Premium Widget   29.99      Widgets       149.95
+3      1004          503     TOOL-C         3  2024-01-17    Carol White   Gold        Pro Tool   79.99        Tools       239.97</code></pre>
+            </div>
+        </div>
+
+        <h2>⚠️ Common Pitfalls & Tips</h2>
+        <div class="note">
+            <strong>Tip 1:</strong> Make sure the matching columns exist in both dataframes with the same names.
+        </div>
+        <div class="note">
+            <strong>Tip 2:</strong> If a match isn't found, the brought columns will have NaN (missing) values.
+        </div>
+        <div class="note">
+            <strong>Tip 3:</strong> The function performs a LEFT join, meaning all rows from the target dataframe are kept.
+        </div>
+        <div class="note">
+            <strong>Tip 4:</strong> You can chain multiple <code>add.to()</code> calls to bring columns from different reference dataframes.
+        </div>
+
+        <h2>🎯 Quick Reference</h2>
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-title">Basic syntax template</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code># Single column, single match
+result = add.to(target_df, from_df=reference_df, bring='column_name', against='match_column')
+
+# Multiple columns, single match
+result = add.to(target_df, from_df=reference_df, bring=['col1', 'col2'], against='match_column')
+
+# Single column, multiple matches
+result = add.to(target_df, from_df=reference_df, bring='column_name', against=['match1', 'match2'])
+
+# Multiple columns, multiple matches
+result = add.to(target_df, from_df=reference_df, bring=['col1', 'col2'], against=['match1', 'match2'])</code></pre>
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const button = document.querySelector('.theme-toggle');
+            
+            html.setAttribute('data-theme', newTheme);
+            button.textContent = newTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+            
+            // Save preference
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Load saved theme preference
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const button = document.querySelector('.theme-toggle');
+            
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                button.textContent = '☀️ Light Mode';
+            }
+        });
+
+        // Copy code functionality
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block').querySelector('code');
+            const text = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
