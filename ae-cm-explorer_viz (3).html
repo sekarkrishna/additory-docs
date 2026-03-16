@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>AE–CM Clinical Correlation Explorer v2</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d0f14;
+  --surface: #141720;
+  --surface2: #1a1e2b;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8eaf0;
+  --text-dim: #6b7280;
+  --text-mid: #9ca3af;
+  --accent: #4fc3f7;
+  --accent-glow: rgba(79,195,247,0.15);
+  --mild: #f9c74f;
+  --moderate: #f77f00;
+  --severe: #e63946;
+  --mild-dim: rgba(249,199,79,0.15);
+  --moderate-dim: rgba(247,127,0,0.15);
+  --severe-dim: rgba(230,57,70,0.15);
+  --ongoing: #a78bfa;
+  --resolved: #34d399;
+  --chemo: #86efac;
+  --steroid: #fcd34d;
+  --antibio: #7dd3fc;
+  --immuno: #f9a8d4;
+  --anticoag: #c4b5fd;
+  --male: #60a5fa;
+  --female: #f472b6;
+}
+:root.light {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface2: #eef0f4;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #111318;
+  --text-dim: #6b7280;
+  --text-mid: #4b5563;
+  --accent: #0284c7;
+  --accent-glow: rgba(2,132,199,0.12);
+  --mild: #d97706;
+  --moderate: #ea580c;
+  --severe: #dc2626;
+  --mild-dim: rgba(217,119,6,0.12);
+  --moderate-dim: rgba(234,88,12,0.12);
+  --severe-dim: rgba(220,38,38,0.12);
+  --ongoing: #7c3aed;
+  --resolved: #059669;
+  --chemo: #4ade80;
+  --steroid: #fbbf24;
+  --antibio: #38bdf8;
+  --immuno: #f472b6;
+  --anticoag: #a78bfa;
+  --male: #3b82f6;
+  --female: #ec4899;
+}
+body {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+/* ── TOOLBAR ── */
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.toolbar-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.toolbar-divider { width:1px; height:24px; background:var(--border2); flex-shrink:0; }
+
+/* View toggle */
+.view-toggle {
+  display: flex;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.view-btn {
+  padding: 5px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.view-btn.active { background: var(--accent); color: #000; font-weight: 500; }
+
+/* Patient selector */
+.patient-tabs {
+  display: flex;
+  gap: 4px;
+}
+.pt-tab {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  background: var(--surface2);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.pt-tab:hover { border-color: var(--accent); color: var(--accent); }
+.pt-tab.active { background: var(--surface2); border-color: var(--accent); color: var(--accent); }
+.pt-tab .pt-gender { font-size: 9px; opacity: 0.7; }
+
+.btn {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text-mid);
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Timeline */
+.timeline-wrap { flex:1; display:flex; align-items:center; gap:8px; min-width:120px; }
+.timeline-label { font-size:10px; color:var(--text-dim); white-space:nowrap; }
+#timeline {
+  flex:1; height:3px; -webkit-appearance:none;
+  background:var(--border2); border-radius:2px; outline:none; cursor:pointer;
+}
+#timeline::-webkit-slider-thumb {
+  -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+  background:var(--accent); box-shadow:0 0 6px var(--accent); cursor:pointer;
+}
+#dateDisplay { font-size:11px; color:var(--accent); white-space:nowrap; min-width:80px; }
+
+/* Legend */
+.legend { display:flex; gap:8px; align-items:center; }
+.legend-item { display:flex; align-items:center; gap:4px; font-size:10px; color:var(--text-dim); }
+.legend-dot { width:7px; height:7px; border-radius:50%; }
+
+/* ── PATIENT VIEW LAYOUT ── */
+#patientView {
+  display: grid;
+  grid-template-columns: 56px 1fr 340px;
+  height: 100%;
+  overflow: hidden;
+}
+#trialView {
+  display: none;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── LEFT RAIL ── */
+#rail {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 6px;
+  overflow-y: auto;
+}
+.rail-label {
+  font-size: 8px; color:var(--text-dim); letter-spacing:0.1em;
+  text-transform:uppercase; writing-mode:vertical-lr;
+  transform:rotate(180deg); margin:4px 0;
+}
+.drug-chip {
+  width:38px; height:38px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:8px; font-weight:500; text-align:center; line-height:1.2;
+  cursor:pointer; transition:all 0.2s;
+  border:1.5px solid transparent; color:rgba(0,0,0,0.75);
+}
+.drug-chip:hover { transform:scale(1.1); }
+.drug-chip.inactive { opacity:0.2; }
+.drug-chip.active { border-color:white; box-shadow:0 0 10px rgba(255,255,255,0.25); }
+.CHEMO{background:var(--chemo)} .STEROID{background:var(--steroid)}
+.ANTIBIO{background:var(--antibio)} .IMMUNO{background:var(--immuno)} .ANTICOAG{background:var(--anticoag)}
+
+#drugPopup {
+  position:absolute; left:64px; top:50px;
+  background:var(--surface2); border:1px solid var(--border2);
+  border-radius:8px; padding:10px; min-width:170px;
+  z-index:200; display:none; box-shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+#drugPopup h4 { font-family:'Syne',sans-serif; font-size:11px; color:var(--text-mid); margin-bottom:6px; letter-spacing:0.08em; text-transform:uppercase; }
+.drug-popup-item {
+  padding:5px 8px; border-radius:4px; font-size:11px; cursor:pointer;
+  color:var(--text); display:flex; flex-direction:column; gap:2px; transition:background 0.1s;
+}
+.drug-popup-item:hover { background:var(--border); }
+.drug-popup-item.selected { background:var(--accent-glow); color:var(--accent); }
+.drug-popup-item span { font-size:9px; color:var(--text-dim); }
+
+/* ── CANVAS ── */
+#canvas {
+  position:relative; overflow:hidden; background:var(--bg);
+}
+#canvas svg { width:100%; height:100%; cursor:grab; }
+#canvas svg.grabbing { cursor:grabbing; }
+.body-path { fill:none; stroke:rgba(255,255,255,0.08); stroke-width:1.5; }
+.zone-box { fill:rgba(255,255,255,0.02); stroke:rgba(255,255,255,0.07); stroke-width:1; stroke-dasharray:3,3; }
+.zone-label-text { font-family:'DM Mono',monospace; font-size:9px; fill:rgba(255,255,255,0.2); letter-spacing:0.1em; text-transform:uppercase; }
+:root.light .body-path { stroke:rgba(0,0,0,0.18); }
+:root.light .zone-box { fill:rgba(0,0,0,0.02); stroke:rgba(0,0,0,0.12); }
+:root.light .zone-label-text { fill:rgba(0,0,0,0.3); }
+.ae-group { cursor:pointer; }
+.ae-core { transition:opacity 0.3s; }
+.ae-core.hidden { opacity:0; pointer-events:none; }
+.ae-core.mild { fill:var(--mild); }
+.ae-core.moderate { fill:var(--moderate); }
+.ae-core.severe { fill:var(--severe); }
+.status-ring { fill:none; stroke-width:1.5; transition:opacity 0.3s; }
+.status-ring.ghost { opacity:0; }
+.highlight-ring { fill:none; stroke:transparent; stroke-width:2; transition:all 0.25s; }
+.highlight-ring.active { stroke:var(--accent); filter:drop-shadow(0 0 4px var(--accent)); }
+.highlight-ring.ghost { opacity:0; }
+
+#tooltip {
+  position:absolute; background:var(--surface2); border:1px solid var(--border2);
+  border-radius:6px; padding:5px 10px; font-size:10px; color:var(--text);
+  pointer-events:none; opacity:0; transition:opacity 0.15s; z-index:300; white-space:nowrap;
+}
+#tooltip.visible { opacity:1; }
+#tooltip .tt-term { font-weight:500; color:var(--text); margin-bottom:1px; }
+#tooltip .tt-sev { font-size:9px; color:var(--text-dim); }
+
+/* ── SIDE PANEL ── */
+#sidepanel {
+  background:var(--surface); border-left:1px solid var(--border);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+#panel-empty {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:100%; gap:10px; color:var(--text-dim); padding:32px; text-align:center;
+}
+#panel-empty .empty-icon { font-size:28px; opacity:0.25; }
+#panel-empty p { font-size:11px; line-height:1.6; }
+#panel-content { display:none; flex-direction:column; height:100%; overflow:hidden; }
+.panel-header { padding:14px 18px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.panel-term { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; color:var(--text); margin-bottom:5px; }
+.panel-badges { display:flex; gap:5px; flex-wrap:wrap; }
+.badge { padding:2px 7px; border-radius:3px; font-size:9px; letter-spacing:0.07em; text-transform:uppercase; font-weight:500; }
+.badge-mild { background:var(--mild-dim); color:var(--mild); border:1px solid var(--mild); }
+.badge-moderate { background:var(--moderate-dim); color:var(--moderate); border:1px solid var(--moderate); }
+.badge-severe { background:var(--severe-dim); color:var(--severe); border:1px solid var(--severe); }
+.badge-ongoing { background:rgba(167,139,250,0.1); color:var(--ongoing); border:1px solid var(--ongoing); }
+.badge-resolved { background:rgba(52,211,153,0.1); color:var(--resolved); border:1px solid var(--resolved); }
+.panel-meta {
+  padding:10px 18px; border-bottom:1px solid var(--border);
+  display:grid; grid-template-columns:1fr 1fr; gap:7px; flex-shrink:0;
+}
+.meta-item label { display:block; font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:2px; }
+.meta-item span { font-size:12px; color:var(--text); }
+.panel-cm-header { padding:10px 18px 6px; flex-shrink:0; }
+.panel-cm-header h4 { font-family:'Syne',sans-serif; font-size:11px; font-weight:600; color:var(--text-mid); letter-spacing:0.1em; text-transform:uppercase; }
+.panel-cm-count { font-size:10px; color:var(--text-dim); margin-top:2px; }
+.panel-cm-list { flex:1; overflow-y:auto; padding:0 10px 10px; }
+.panel-cm-list::-webkit-scrollbar { width:3px; }
+.panel-cm-list::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+.cm-card {
+  border:1px solid var(--border); border-radius:6px; padding:9px 11px;
+  margin-bottom:7px; cursor:pointer; transition:all 0.15s;
+  display:flex; align-items:center; gap:9px;
+}
+.cm-card:hover { border-color:var(--border2); background:var(--surface2); }
+.cm-card.highlighted { border-color:var(--accent); background:var(--accent-glow); }
+.cm-cat-dot { width:7px; height:7px; border-radius:2px; flex-shrink:0; }
+.cm-card-info { flex:1; min-width:0; }
+.cm-card-name { font-size:12px; color:var(--text); }
+.cm-card-meta { font-size:10px; color:var(--text-dim); margin-top:1px; }
+.cm-card-cat { font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.07em; }
+.cm-timeline-bar { height:4px; border-radius:2px; margin-top:5px; position:relative; background:rgba(255,255,255,0.05); overflow:hidden; }
+.cm-timeline-fill { position:absolute; top:0; height:100%; border-radius:2px; opacity:0.6; }
+.cm-overlap-fill { position:absolute; top:0; height:100%; border-radius:2px; background:var(--accent); opacity:0.9; }
+.no-cm { font-size:11px; color:var(--text-dim); text-align:center; padding:16px; }
+.panel-stats { border-top:1px solid var(--border); padding:8px 18px; display:flex; gap:14px; flex-shrink:0; }
+.stat-item { text-align:center; }
+.stat-val { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--text); }
+.stat-label { font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.07em; }
+
+/* ── TRIAL VIEW ── */
+#trialView {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+#trialView.visible {
+  display: flex;
+}
+.trial-header {
+  padding: 14px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.trial-header-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-mid);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.trial-stat-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.trial-stat-pill strong { color: var(--text); }
+
+.trial-gender-row {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.gender-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px 12px;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+.gender-panel.male { border-right: 1px solid var(--border); }
+
+.trial-svg-wrap {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  position: relative;
+}
+.trial-svg-wrap svg {
+  width: 100%;
+  height: 100%;
+}
+
+.gender-label {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gender-label.male-label { color: var(--male); }
+.gender-label.female-label { color: var(--female); }
+
+.gender-sub {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+/* Severity pie tooltip */
+#trialTooltip {
+  position: fixed;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 11px;
+  color: var(--text);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 500;
+  min-width: 160px;
+}
+#trialTooltip.visible { opacity: 1; }
+#trialTooltip .tt-ae-name { font-family:'Syne',sans-serif; font-weight:700; font-size:13px; margin-bottom:6px; }
+.tt-sev-row { display:flex; align-items:center; gap:7px; margin:3px 0; font-size:10px; }
+.tt-sev-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.tt-count { margin-left:auto; color:var(--text-mid); }
+
+/* Legend for trial view */
+.trial-legend {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  padding: 8px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.tl-item { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--text-dim); }
+.tl-dot { width:8px; height:8px; border-radius:50%; }
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <div class="toolbar-logo">AE · CM Explorer</div>
+  <div class="toolbar-divider"></div>
+
+  <div class="view-toggle">
+    <button class="view-btn active" onclick="switchView('patient')">Patient View</button>
+    <button class="view-btn" onclick="switchView('trial')">Trial View</button>
+  </div>
+
+  <div class="toolbar-divider"></div>
+
+  <!-- Patient selector (only in patient view) -->
+  <div class="patient-tabs" id="patientTabs">
+    <div class="pt-tab active" onclick="selectPatient(0)">PT-001 <span class="pt-gender">♂ M/52</span></div>
+    <div class="pt-tab" onclick="selectPatient(1)">PT-002 <span class="pt-gender">♀ F/44</span></div>
+    <div class="pt-tab" onclick="selectPatient(2)">PT-003 <span class="pt-gender">♂ M/38</span></div>
+    <div class="pt-tab" onclick="selectPatient(3)">PT-004 <span class="pt-gender">♀ F/61</span></div>
+  </div>
+
+  <div class="toolbar-divider" id="timelineDivider"></div>
+
+  <div class="timeline-wrap" id="timelineWrap">
+    <span class="timeline-label">Jan 1</span>
+    <input id="timeline" type="range" min="0" max="100" value="100"/>
+    <span class="timeline-label">Mar 31</span>
+    <span id="dateDisplay">2026-03-31</span>
+  </div>
+
+  <div class="toolbar-divider"></div>
+  <button class="btn" onclick="resetAll()">Reset</button>
+  <div class="toolbar-divider"></div>
+  <button class="btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark">☀︎</button>
+  <div class="toolbar-divider"></div>
+
+  <div class="legend" id="mainLegend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--mild)"></div>Mild</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--moderate)"></div>Moderate</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--severe)"></div>Severe</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--ongoing)"></div>Ongoing</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--resolved)"></div>Resolved</div>
+  </div>
+</div>
+
+<!-- ══════════════════ PATIENT VIEW ══════════════════ -->
+<div id="patientView">
+
+  <!-- Left rail -->
+  <div id="rail"></div>
+  <div id="drugPopup"></div>
+
+  <!-- Canvas -->
+  <div id="canvas">
+    <svg id="svg" viewBox="0 0 700 820">
+      <defs>
+        <radialGradient id="bodyGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(79,195,247,0.04)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+        </radialGradient>
+      </defs>
+      <g id="viewport">
+        <ellipse cx="370" cy="430" rx="160" ry="280" fill="url(#bodyGlow)"/>
+        <g id="silhouette" transform="translate(148,120) scale(2.1)">
+          <path class="body-path" d="M104.265,117.959c-0.304,3.58,2.126,22.529,3.38,29.959c0.597,3.52,2.234,9.255,1.645,12.3c-0.841,4.244-1.084,9.736-0.621,12.934c0.292,1.942,1.211,10.899-0.104,14.175c-0.688,1.718-1.949,10.522-1.949,10.522c-3.285,8.294-1.431,7.886-1.431,7.886c1.017,1.248,2.759,0.098,2.759,0.098c1.327,0.846,2.246-0.201,2.246-0.201c1.139,0.943,2.467-0.116,2.467-0.116c1.431,0.743,2.758-0.627,2.758-0.627c0.822,0.414,1.023-0.109,1.023-0.109c2.466-0.158-1.376-8.05-1.376-8.05c-0.92-7.088,0.913-11.033,0.913-11.033c6.004-17.805,6.309-22.53,3.909-29.24c-0.676-1.937-0.847-2.704-0.536-3.545c0.719-1.941,0.195-9.748,1.072-12.848c1.692-5.979,3.361-21.142,4.231-28.217c1.169-9.53-4.141-22.308-4.141-22.308c-1.163-5.2,0.542-23.727,0.542-23.727c2.381,3.705,2.29,10.245,2.29,10.245c-0.378,6.859,5.541,17.342,5.541,17.342c2.844,4.332,3.921,8.442,3.921,8.747c0,1.248-0.273,4.269-0.273,4.269l0.109,2.631c0.049,0.67,0.426,2.977,0.365,4.092c-0.444,6.862,0.646,5.571,0.646,5.571c0.92,0,1.931-5.522,1.931-5.522c0,1.424-0.348,5.687,0.42,7.295c0.919,1.918,1.595-0.329,1.607-0.78c0.243-8.737,0.768-6.448,0.768-6.448c0.511,7.088,1.139,8.689,2.265,8.135c0.853-0.407,0.073-8.506,0.073-8.506c1.461,4.811,2.569,5.577,2.569,5.577c2.411,1.693,0.92-2.983,0.585-3.909c-1.784-4.92-1.839-6.625-1.839-6.625c2.229,4.421,3.909,4.257,3.909,4.257c2.174-0.694-1.9-6.954-4.287-9.953c-1.218-1.528-2.789-3.574-3.245-4.789c-0.743-2.058-1.304-8.674-1.304-8.674c-0.225-7.807-2.155-11.198-2.155-11.198c-3.3-5.282-3.921-15.135-3.921-15.135l-0.146-16.635c-1.157-11.347-9.518-11.429-9.518-11.429c-8.451-1.258-9.627-3.988-9.627-3.988c-1.79-2.576-0.767-7.514-0.767-7.514c1.485-1.208,2.058-4.415,2.058-4.415c2.466-1.891,2.345-4.658,1.206-4.628c-0.914,0.024-0.707-0.733-0.707-0.733C115.068,0.636,104.01,0,104.01,0h-1.688c0,0-11.063,0.636-9.523,13.089c0,0,0.207,0.758-0.715,0.733c-1.136-0.03-1.242,2.737,1.215,4.628c0,0,0.572,3.206,2.058,4.415c0,0,1.023,4.938-0.767,7.514c0,0-1.172,2.73-9.627,3.988c0,0-8.375,0.082-9.514,11.429l-0.158,16.635c0,0-0.609,9.853-3.922,15.135c0,0-1.921,3.392-2.143,11.198c0,0-0.563,6.616-1.303,8.674c-0.451,1.209-2.021,3.255-3.249,4.789c-2.408,2.993-6.455,9.24-4.29,9.953c0,0,1.689,0.164,3.909-4.257c0,0-0.046,1.693-1.827,6.625c-0.35,0.914-1.839,5.59,0.573,3.909c0,0,1.117-0.767,2.569-5.577c0,0-0.779,8.099,0.088,8.506c1.133,0.555,1.751-1.047,2.262-8.135c0,0,0.524-2.289,0.767,6.448c0.012,0.451,0.673,2.698,1.596,0.78c0.779-1.608,0.429-5.864,0.429-7.295c0,0,0.999,5.522,1.933,5.522c0,0,1.099,1.291,0.648-5.571c-0.073-1.121,0.32-3.422,0.369-4.092l0.106-2.631c0,0-0.274-3.014-0.274-4.269c0-0.311,1.078-4.415,3.921-8.747c0,0,5.913-10.488,5.532-17.342c0,0-0.082-6.54,2.299-10.245c0,0,1.69,18.526,0.545,23.727c0,0-5.319,12.778-4.146,22.308c0.864,7.094,2.53,22.237,4.226,28.217c0.886,3.094,0.362,10.899,1.072,12.848c0.32,0.847,0.152,1.627-0.536,3.545c-2.387,6.71-2.083,11.436,3.921,29.24c0,0,1.848,3.945,0.914,11.033c0,0-3.836,7.892-1.379,8.05c0,0,0.192,0.523,1.023,0.109c0,0,1.327,1.37,2.761,0.627c0,0,1.328,1.06,2.463,0.116c0,0,0.91,1.047,2.237,0.201c0,0,1.742,1.175,2.777-0.098c0,0,1.839,0.408-1.435-7.886c0,0-1.254-8.793-1.945-10.522c-1.318-3.275-0.387-12.251-0.106-14.175c0.453-3.216,0.21-8.695-0.618-12.934c-0.606-3.038,1.035-8.774,1.641-12.3c1.245-7.423,3.685-26.373,3.38-29.959l1.008,0.354C103.809,118.312,104.265,117.959,104.265,117.959z"/>
+        </g>
+        <rect class="zone-box" x="540" y="500" width="130" height="75" rx="6"/>
+        <text class="zone-label-text" x="605" y="516" text-anchor="middle">Lab Values</text>
+        <rect class="zone-box" x="540" y="590" width="130" height="75" rx="6"/>
+        <text class="zone-label-text" x="605" y="606" text-anchor="middle">Physical Exam</text>
+        <rect class="zone-box" x="20" y="150" width="100" height="220" rx="6"/>
+        <text class="zone-label-text" x="70" y="166" text-anchor="middle">Systemic</text>
+        <g id="aeContainer"></g>
+      </g>
+    </svg>
+    <div id="tooltip"><div class="tt-term" id="tt-term"></div><div class="tt-sev" id="tt-sev"></div></div>
+  </div>
+
+  <!-- Side panel -->
+  <div id="sidepanel">
+    <div id="panel-empty">
+      <div class="empty-icon">◎</div>
+      <p>Click any marker to see adverse event details and correlated medications.</p>
+    </div>
+    <div id="panel-content">
+      <div class="panel-header">
+        <div class="panel-term" id="pc-term"></div>
+        <div class="panel-badges" id="pc-badges"></div>
+      </div>
+      <div class="panel-meta" id="pc-meta"></div>
+      <div class="panel-cm-header">
+        <h4>Concomitant Medications</h4>
+        <div class="panel-cm-count" id="pc-cm-count"></div>
+      </div>
+      <div class="panel-cm-list" id="pc-cm-list"></div>
+      <div class="panel-stats" id="pc-stats"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ TRIAL VIEW ══════════════════ -->
+<div id="trialView">
+  <div class="trial-header">
+    <div class="trial-header-title">Trial Safety Overview</div>
+    <div class="trial-stat-pill">N = <strong>4</strong> patients</div>
+    <div class="trial-stat-pill"><strong id="trial-ae-total">0</strong> total AEs</div>
+    <div class="trial-stat-pill"><strong id="trial-ae-ongoing">0</strong> ongoing</div>
+    <div style="margin-left:auto; font-size:10px; color:var(--text-dim);">Hover markers to see severity breakdown · Size reflects frequency</div>
+  </div>
+
+  <div class="trial-gender-row">
+    <div class="gender-panel male">
+      <div class="gender-label male-label">♂ Male</div>
+      <div class="gender-sub" id="male-sub">2 patients · 0 AEs</div>
+      <div class="trial-svg-wrap">
+        <svg id="trialSvgMale" viewBox="0 0 400 820" preserveAspectRatio="xMidYMid meet">
+          <g id="vpMale">
+            <ellipse cx="200" cy="370" rx="130" ry="260" fill="url(#bodyGlow)"/>
+            <g transform="translate(0,60) scale(1.85)">
+              <path class="body-path" d="M104.265,117.959c-0.304,3.58,2.126,22.529,3.38,29.959c0.597,3.52,2.234,9.255,1.645,12.3c-0.841,4.244-1.084,9.736-0.621,12.934c0.292,1.942,1.211,10.899-0.104,14.175c-0.688,1.718-1.949,10.522-1.949,10.522c-3.285,8.294-1.431,7.886-1.431,7.886c1.017,1.248,2.759,0.098,2.759,0.098c1.327,0.846,2.246-0.201,2.246-0.201c1.139,0.943,2.467-0.116,2.467-0.116c1.431,0.743,2.758-0.627,2.758-0.627c0.822,0.414,1.023-0.109,1.023-0.109c2.466-0.158-1.376-8.05-1.376-8.05c-0.92-7.088,0.913-11.033,0.913-11.033c6.004-17.805,6.309-22.53,3.909-29.24c-0.676-1.937-0.847-2.704-0.536-3.545c0.719-1.941,0.195-9.748,1.072-12.848c1.692-5.979,3.361-21.142,4.231-28.217c1.169-9.53-4.141-22.308-4.141-22.308c-1.163-5.2,0.542-23.727,0.542-23.727c2.381,3.705,2.29,10.245,2.29,10.245c-0.378,6.859,5.541,17.342,5.541,17.342c2.844,4.332,3.921,8.442,3.921,8.747c0,1.248-0.273,4.269-0.273,4.269l0.109,2.631c0.049,0.67,0.426,2.977,0.365,4.092c-0.444,6.862,0.646,5.571,0.646,5.571c0.92,0,1.931-5.522,1.931-5.522c0,1.424-0.348,5.687,0.42,7.295c0.919,1.918,1.595-0.329,1.607-0.78c0.243-8.737,0.768-6.448,0.768-6.448c0.511,7.088,1.139,8.689,2.265,8.135c0.853-0.407,0.073-8.506,0.073-8.506c1.461,4.811,2.569,5.577,2.569,5.577c2.411,1.693,0.92-2.983,0.585-3.909c-1.784-4.92-1.839-6.625-1.839-6.625c2.229,4.421,3.909,4.257,3.909,4.257c2.174-0.694-1.9-6.954-4.287-9.953c-1.218-1.528-2.789-3.574-3.245-4.789c-0.743-2.058-1.304-8.674-1.304-8.674c-0.225-7.807-2.155-11.198-2.155-11.198c-3.3-5.282-3.921-15.135-3.921-15.135l-0.146-16.635c-1.157-11.347-9.518-11.429-9.518-11.429c-8.451-1.258-9.627-3.988-9.627-3.988c-1.79-2.576-0.767-7.514-0.767-7.514c1.485-1.208,2.058-4.415,2.058-4.415c2.466-1.891,2.345-4.658,1.206-4.628c-0.914,0.024-0.707-0.733-0.707-0.733C115.068,0.636,104.01,0,104.01,0h-1.688c0,0-11.063,0.636-9.523,13.089c0,0,0.207,0.758-0.715,0.733c-1.136-0.03-1.242,2.737,1.215,4.628c0,0,0.572,3.206,2.058,4.415c0,0,1.023,4.938-0.767,7.514c0,0-1.172,2.73-9.627,3.988c0,0-8.375,0.082-9.514,11.429l-0.158,16.635c0,0-0.609,9.853-3.922,15.135c0,0-1.921,3.392-2.143,11.198c0,0-0.563,6.616-1.303,8.674c-0.451,1.209-2.021,3.255-3.249,4.789c-2.408,2.993-6.455,9.24-4.29,9.953c0,0,1.689,0.164,3.909-4.257c0,0-0.046,1.693-1.827,6.625c-0.35,0.914-1.839,5.59,0.573,3.909c0,0,1.117-0.767,2.569-5.577c0,0-0.779,8.099,0.088,8.506c1.133,0.555,1.751-1.047,2.262-8.135c0,0,0.524-2.289,0.767,6.448c0.012,0.451,0.673,2.698,1.596,0.78c0.779-1.608,0.429-5.864,0.429-7.295c0,0,0.999,5.522,1.933,5.522c0,0,1.099,1.291,0.648-5.571c-0.073-1.121,0.32-3.422,0.369-4.092l0.106-2.631c0,0-0.274-3.014-0.274-4.269c0-0.311,1.078-4.415,3.921-8.747c0,0,5.913-10.488,5.532-17.342c0,0-0.082-6.54,2.299-10.245c0,0,1.69,18.526,0.545,23.727c0,0-5.319,12.778-4.146,22.308c0.864,7.094,2.53,22.237,4.226,28.217c0.886,3.094,0.362,10.899,1.072,12.848c0.32,0.847,0.152,1.627-0.536,3.545c-2.387,6.71-2.083,11.436,3.921,29.24c0,0,1.848,3.945,0.914,11.033c0,0-3.836,7.892-1.379,8.05c0,0,0.192,0.523,1.023,0.109c0,0,1.327,1.37,2.761,0.627c0,0,1.328,1.06,2.463,0.116c0,0,0.91,1.047,2.237,0.201c0,0,1.742,1.175,2.777-0.098c0,0,1.839,0.408-1.435-7.886c0,0-1.254-8.793-1.945-10.522c-1.318-3.275-0.387-12.251-0.106-14.175c0.453-3.216,0.21-8.695-0.618-12.934c-0.606-3.038,1.035-8.774,1.641-12.3c1.245-7.423,3.685-26.373,3.38-29.959l1.008,0.354C103.809,118.312,104.265,117.959,104.265,117.959z"/>
+            </g>
+            <g id="trialAEMale"></g>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="gender-panel female">
+      <div class="gender-label female-label">♀ Female</div>
+      <div class="gender-sub" id="female-sub">2 patients · 0 AEs</div>
+      <div class="trial-svg-wrap">
+        <svg id="trialSvgFemale" viewBox="0 0 400 820" preserveAspectRatio="xMidYMid meet">
+          <g id="vpFemale">
+            <ellipse cx="200" cy="370" rx="130" ry="260" fill="url(#bodyGlow)"/>
+            <g transform="translate(0,60) scale(1.85)">
+              <path class="body-path" d="M104.265,117.959c-0.304,3.58,2.126,22.529,3.38,29.959c0.597,3.52,2.234,9.255,1.645,12.3c-0.841,4.244-1.084,9.736-0.621,12.934c0.292,1.942,1.211,10.899-0.104,14.175c-0.688,1.718-1.949,10.522-1.949,10.522c-3.285,8.294-1.431,7.886-1.431,7.886c1.017,1.248,2.759,0.098,2.759,0.098c1.327,0.846,2.246-0.201,2.246-0.201c1.139,0.943,2.467-0.116,2.467-0.116c1.431,0.743,2.758-0.627,2.758-0.627c0.822,0.414,1.023-0.109,1.023-0.109c2.466-0.158-1.376-8.05-1.376-8.05c-0.92-7.088,0.913-11.033,0.913-11.033c6.004-17.805,6.309-22.53,3.909-29.24c-0.676-1.937-0.847-2.704-0.536-3.545c0.719-1.941,0.195-9.748,1.072-12.848c1.692-5.979,3.361-21.142,4.231-28.217c1.169-9.53-4.141-22.308-4.141-22.308c-1.163-5.2,0.542-23.727,0.542-23.727c2.381,3.705,2.29,10.245,2.29,10.245c-0.378,6.859,5.541,17.342,5.541,17.342c2.844,4.332,3.921,8.442,3.921,8.747c0,1.248-0.273,4.269-0.273,4.269l0.109,2.631c0.049,0.67,0.426,2.977,0.365,4.092c-0.444,6.862,0.646,5.571,0.646,5.571c0.92,0,1.931-5.522,1.931-5.522c0,1.424-0.348,5.687,0.42,7.295c0.919,1.918,1.595-0.329,1.607-0.78c0.243-8.737,0.768-6.448,0.768-6.448c0.511,7.088,1.139,8.689,2.265,8.135c0.853-0.407,0.073-8.506,0.073-8.506c1.461,4.811,2.569,5.577,2.569,5.577c2.411,1.693,0.92-2.983,0.585-3.909c-1.784-4.92-1.839-6.625-1.839-6.625c2.229,4.421,3.909,4.257,3.909,4.257c2.174-0.694-1.9-6.954-4.287-9.953c-1.218-1.528-2.789-3.574-3.245-4.789c-0.743-2.058-1.304-8.674-1.304-8.674c-0.225-7.807-2.155-11.198-2.155-11.198c-3.3-5.282-3.921-15.135-3.921-15.135l-0.146-16.635c-1.157-11.347-9.518-11.429-9.518-11.429c-8.451-1.258-9.627-3.988-9.627-3.988c-1.79-2.576-0.767-7.514-0.767-7.514c1.485-1.208,2.058-4.415,2.058-4.415c2.466-1.891,2.345-4.658,1.206-4.628c-0.914,0.024-0.707-0.733-0.707-0.733C115.068,0.636,104.01,0,104.01,0h-1.688c0,0-11.063,0.636-9.523,13.089c0,0,0.207,0.758-0.715,0.733c-1.136-0.03-1.242,2.737,1.215,4.628c0,0,0.572,3.206,2.058,4.415c0,0,1.023,4.938-0.767,7.514c0,0-1.172,2.73-9.627,3.988c0,0-8.375,0.082-9.514,11.429l-0.158,16.635c0,0-0.609,9.853-3.922,15.135c0,0-1.921,3.392-2.143,11.198c0,0-0.563,6.616-1.303,8.674c-0.451,1.209-2.021,3.255-3.249,4.789c-2.408,2.993-6.455,9.24-4.29,9.953c0,0,1.689,0.164,3.909-4.257c0,0-0.046,1.693-1.827,6.625c-0.35,0.914-1.839,5.59,0.573,3.909c0,0,1.117-0.767,2.569-5.577c0,0-0.779,8.099,0.088,8.506c1.133,0.555,1.751-1.047,2.262-8.135c0,0,0.524-2.289,0.767,6.448c0.012,0.451,0.673,2.698,1.596,0.78c0.779-1.608,0.429-5.864,0.429-7.295c0,0,0.999,5.522,1.933,5.522c0,0,1.099,1.291,0.648-5.571c-0.073-1.121,0.32-3.422,0.369-4.092l0.106-2.631c0,0-0.274-3.014-0.274-4.269c0-0.311,1.078-4.415,3.921-8.747c0,0,5.913-10.488,5.532-17.342c0,0-0.082-6.54,2.299-10.245c0,0,1.69,18.526,0.545,23.727c0,0-5.319,12.778-4.146,22.308c0.864,7.094,2.53,22.237,4.226,28.217c0.886,3.094,0.362,10.899,1.072,12.848c0.32,0.847,0.152,1.627-0.536,3.545c-2.387,6.71-2.083,11.436,3.921,29.24c0,0,1.848,3.945,0.914,11.033c0,0-3.836,7.892-1.379,8.05c0,0,0.192,0.523,1.023,0.109c0,0,1.327,1.37,2.761,0.627c0,0,1.328,1.06,2.463,0.116c0,0,0.91,1.047,2.237,0.201c0,0,1.742,1.175,2.777-0.098c0,0,1.839,0.408-1.435-7.886c0,0-1.254-8.793-1.945-10.522c-1.318-3.275-0.387-12.251-0.106-14.175c0.453-3.216,0.21-8.695-0.618-12.934c-0.606-3.038,1.035-8.774,1.641-12.3c1.245-7.423,3.685-26.373,3.38-29.959l1.008,0.354C103.809,118.312,104.265,117.959,104.265,117.959z"/>
+            </g>
+            <g id="trialAEFemale"></g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="trial-legend">
+    <div class="tl-item"><div class="tl-dot" style="background:var(--mild)"></div>Mild</div>
+    <div class="tl-item"><div class="tl-dot" style="background:var(--moderate)"></div>Moderate</div>
+    <div class="tl-item"><div class="tl-dot" style="background:var(--severe)"></div>Severe</div>
+    <div style="width:1px;height:14px;background:var(--border2)"></div>
+    <div class="tl-item" style="color:var(--text-mid)">Marker size = frequency &nbsp;·&nbsp; Pie = severity mix &nbsp;·&nbsp; Hover for details</div>
+  </div>
+</div>
+
+<!-- Trial tooltip -->
+<div id="trialTooltip">
+  <div class="tt-ae-name" id="ttt-name"></div>
+  <div id="ttt-rows"></div>
+</div>
+
+<script>
+const TODAY = new Date('2026-03-15');
+const RANGE_START = new Date('2026-01-01');
+const RANGE_END = new Date('2026-03-31');
+const RANGE_MS = RANGE_END - RANGE_START;
+
+const CAT_COLORS = { CHEMO:'#86efac', STEROID:'#fcd34d', ANTIBIO:'#7dd3fc', IMMUNO:'#f9a8d4', ANTICOAG:'#c4b5fd' };
+const CAT_LABELS = { CHEMO:'Chemo', STEROID:'Steroid', ANTIBIO:'Antibiotic', IMMUNO:'Immunotherapy', ANTICOAG:'Anticoagulant' };
+const SEV_COLORS = { mild:'#f9c74f', moderate:'#f77f00', severe:'#e63946' };
+
+// ══════════════════ PATIENT DATA ══════════════════
+const PATIENTS = [
+  {
+    // PT-001 — the rich patient (male, 52)
+    id: 'PT-001', gender: 'male', age: 52, label: 'PT-001 · M/52',
+    drugs: {
+      CHEMO:    [{name:'Cyclophosphamide',s:'2026-01-20',e:'2026-03-10'},{name:'Doxorubicin',s:'2026-02-01',e:'2026-02-25'}],
+      STEROID:  [{name:'Prednisone',s:'2026-01-10',e:'2026-01-28'},{name:'Dexamethasone',s:'2026-01-15',e:'2026-02-20'},{name:'Methylprednisolone',s:'2026-02-10',e:'2026-03-05'}],
+      ANTIBIO:  [{name:'Azithromycin',s:'2026-01-05',e:'2026-01-12'},{name:'Ciprofloxacin',s:'2026-02-15',e:'2026-02-25'}],
+      IMMUNO:   [{name:'Pembrolizumab',s:'2026-01-25',e:'2026-03-01'}],
+      ANTICOAG: [{name:'Warfarin',s:'2026-01-08',e:'2026-03-12'}]
+    },
+    aes: [
+      {term:'Headache',       x:365,y:108, severity:'mild',     start:'2026-01-08',end:'2026-01-15'},
+      {term:'Dizziness',      x:380,y:115, severity:'mild',     start:'2026-01-25',end:'2026-02-02'},
+      {term:'Sore Throat',    x:365,y:178, severity:'mild',     start:'2026-01-06',end:'2026-01-12'},
+      {term:'Chest Pain',     x:360,y:255, severity:'moderate', start:'2026-01-17',end:''},
+      {term:'Nausea',         x:368,y:320, severity:'moderate', start:'2026-01-22',end:'2026-02-06'},
+      {term:'Abdominal Pain', x:360,y:358, severity:'severe',   start:'2026-02-03',end:'2026-02-19'},
+      {term:'Diarrhea',       x:353,y:388, severity:'moderate', start:'2026-02-08',end:'2026-02-15'},
+      {term:'Rash (Torso)',   x:330,y:290, severity:'mild',     start:'2026-01-27',end:'2026-02-09'},
+      {term:'Bruising (Arm)', x:295,y:268, severity:'mild',     start:'2026-01-10',end:'2026-01-23'},
+      {term:'Joint Pain',     x:350,y:548, severity:'moderate', start:'2026-02-10',end:''},
+      {term:'Back Pain',      x:390,y:340, severity:'moderate', start:'2026-02-01',end:'2026-02-20'},
+      {term:'ALT Increased',        x:590,y:535, severity:'moderate',start:'2026-01-28',end:''},
+      {term:'Creatinine Increased', x:620,y:553, severity:'mild',    start:'2026-02-13',end:''},
+      {term:'Neutropenia',          x:575,y:520, severity:'severe',  start:'2026-02-04',end:'2026-02-23'},
+      {term:'Hyperglycemia',        x:605,y:540, severity:'moderate',start:'2026-01-13',end:'2026-01-31'},
+      {term:'Anemia',               x:635,y:555, severity:'mild',    start:'2026-02-18',end:''},
+      {term:'Fever',         x:575,y:614, severity:'moderate',start:'2026-01-06',end:'2026-01-11'},
+      {term:'Weight Gain',   x:605,y:632, severity:'mild',    start:'2026-01-19',end:''},
+      {term:'Edema',         x:635,y:622, severity:'mild',    start:'2026-02-05',end:'2026-02-25'},
+      {term:'Fatigue',           x:70,y:190, severity:'moderate',start:'2026-01-23',end:''},
+      {term:'Insomnia',          x:70,y:218, severity:'mild',    start:'2026-01-18',end:'2026-02-11'},
+      {term:'Anxiety',           x:70,y:246, severity:'moderate',start:'2026-02-08',end:''},
+      {term:'Suicidal Ideation', x:70,y:274, severity:'severe',  start:'2026-02-17',end:''},
+      {term:'Depression',        x:70,y:302, severity:'moderate',start:'2026-02-12',end:''}
+    ]
+  },
+  {
+    // PT-002 — simple female patient
+    id: 'PT-002', gender: 'female', age: 44, label: 'PT-002 · F/44',
+    drugs: {
+      STEROID:  [{name:'Dexamethasone',s:'2026-01-20',e:'2026-02-15'}],
+      ANTIBIO:  [{name:'Azithromycin', s:'2026-01-10',e:'2026-01-20'}]
+    },
+    aes: [
+      {term:'Nausea',   x:368,y:320, severity:'mild',     start:'2026-01-22',end:'2026-02-01'},
+      {term:'Fatigue',  x:70, y:190, severity:'moderate', start:'2026-01-20',end:''}
+    ]
+  },
+  {
+    // PT-003 — simple male patient
+    id: 'PT-003', gender: 'male', age: 38, label: 'PT-003 · M/38',
+    drugs: {
+      CHEMO:    [{name:'Doxorubicin',s:'2026-02-05',e:'2026-03-01'}],
+      ANTICOAG: [{name:'Warfarin',   s:'2026-01-15',e:'2026-03-10'}]
+    },
+    aes: [
+      {term:'Fatigue',    x:70, y:190, severity:'mild',     start:'2026-02-06',end:'2026-02-28'},
+      {term:'Neutropenia',x:575,y:520, severity:'moderate', start:'2026-02-10',end:'2026-03-01'}
+    ]
+  },
+  {
+    // PT-004 — simple female patient
+    id: 'PT-004', gender: 'female', age: 61, label: 'PT-004 · F/61',
+    drugs: {
+      IMMUNO:   [{name:'Pembrolizumab',s:'2026-01-18',e:'2026-03-05'}],
+      STEROID:  [{name:'Prednisone',   s:'2026-02-01',e:'2026-02-20'}]
+    },
+    aes: [
+      {term:'Rash (Torso)', x:330,y:290, severity:'moderate', start:'2026-01-25',end:'2026-02-18'},
+      {term:'Joint Pain',   x:350,y:548, severity:'severe',   start:'2026-02-05',end:''}
+    ]
+  }
+];
+
+// ══════════════════ STATE ══════════════════
+let currentPatientIdx = 0;
+let currentView = 'patient';
+let activeChipCat = null;
+let currentHighlightedDrug = null;
+
+// ══════════════════ VIEW SWITCHING ══════════════════
+function switchView(v) {
+  currentView = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(v)));
+  document.getElementById('patientView').style.display = v === 'patient' ? 'grid' : 'none';
+  const tv = document.getElementById('trialView');
+  tv.style.display = v === 'trial' ? 'flex' : 'none';
+  document.getElementById('patientTabs').style.display = v === 'patient' ? 'flex' : 'none';
+  document.getElementById('timelineDivider').style.display = v === 'patient' ? 'block' : 'none';
+  document.getElementById('timelineWrap').style.display = v === 'patient' ? 'flex' : 'none';
+  if (v === 'trial') renderTrialView();
+}
+
+// ══════════════════ PATIENT SELECTOR ══════════════════
+function selectPatient(idx) {
+  currentPatientIdx = idx;
+  document.querySelectorAll('.pt-tab').forEach((t,i) => t.classList.toggle('active', i === idx));
+  resetPanelState();
+  renderPatientView();
+}
+
+// ══════════════════ PATIENT VIEW ══════════════════
+function renderPatientView() {
+  const pt = PATIENTS[currentPatientIdx];
+  renderAEs(pt);
+  renderRail(pt);
+}
+
+function renderAEs(pt) {
+  const cont = document.getElementById('aeContainer');
+  cont.innerHTML = '';
+  pt.aes.forEach((ae, idx) => {
+    const isOngoing = !ae.end || new Date(ae.end) > TODAY;
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.classList.add('ae-group'); g.dataset.idx = idx;
+    const hr = mkCircle('highlight-ring', ae.x, ae.y, 11); g.appendChild(hr);
+    const sr = mkCircle('status-ring', ae.x, ae.y, 8.5);
+    sr.setAttribute('stroke', isOngoing ? '#a78bfa' : '#34d399');
+    if (isOngoing) sr.setAttribute('stroke-dasharray','40 14');
+    g.appendChild(sr);
+    const core = mkCircle(`ae-core ${ae.severity}`, ae.x, ae.y, 5.5); g.appendChild(core);
+    g.addEventListener('mouseenter', e => showTooltip(e, ae));
+    g.addEventListener('mousemove', moveTooltip);
+    g.addEventListener('mouseleave', hideTooltip);
+    g.addEventListener('click', e => { e.stopPropagation(); showAEPanel(idx); });
+    cont.appendChild(g);
+  });
+}
+
+function mkCircle(cls, cx, cy, r) {
+  const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  cls.split(' ').forEach(cl => cl && c.classList.add(cl));
+  c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',r);
+  return c;
+}
+
+function renderRail(pt) {
+  const rail = document.getElementById('rail');
+  rail.innerHTML = '<div class="rail-label">Medications</div>';
+  const cats = Object.keys(pt.drugs);
+  if (cats.length === 0) {
+    rail.innerHTML += '<div style="font-size:9px;color:var(--text-dim);padding:8px;text-align:center;">None</div>';
+    return;
+  }
+  cats.forEach(cat => {
+    const chip = document.createElement('div');
+    chip.className = `drug-chip ${cat}`;
+    chip.textContent = CAT_LABELS[cat].substring(0,5);
+    chip.title = CAT_LABELS[cat];
+    chip.dataset.cat = cat;
+    chip.addEventListener('click', e => { e.stopPropagation(); onChipClick(cat); });
+    rail.appendChild(chip);
+  });
+}
+
+// ── Tooltip ──
+const tooltip = document.getElementById('tooltip');
+function showTooltip(e, ae) {
+  document.getElementById('tt-term').textContent = ae.term;
+  const status = (!ae.end || new Date(ae.end) > TODAY) ? 'Ongoing' : 'Resolved';
+  document.getElementById('tt-sev').textContent = `${ae.severity} · ${status}`;
+  tooltip.classList.add('visible');
+  moveTooltip(e);
+}
+function moveTooltip(e) {
+  const c = document.getElementById('canvas').getBoundingClientRect();
+  tooltip.style.left = (e.clientX - c.left + 12) + 'px';
+  tooltip.style.top = (e.clientY - c.top - 8) + 'px';
+}
+function hideTooltip() { tooltip.classList.remove('visible'); }
+
+// ── Side panel ──
+function showAEPanel(idx) {
+  const pt = PATIENTS[currentPatientIdx];
+  const ae = pt.aes[idx];
+  const aeStart = new Date(ae.start);
+  const aeEnd = ae.end ? new Date(ae.end) : null;
+  const isOngoing = !aeEnd || aeEnd > TODAY;
+  const dur = aeEnd ? Math.ceil((aeEnd-aeStart)/864e5) : Math.ceil((TODAY-aeStart)/864e5);
+
+  document.getElementById('panel-empty').style.display = 'none';
+  document.getElementById('panel-content').style.display = 'flex';
+  document.getElementById('pc-term').textContent = ae.term;
+  document.getElementById('pc-badges').innerHTML =
+    `<span class="badge badge-${ae.severity}">${ae.severity}</span>
+     <span class="badge badge-${isOngoing?'ongoing':'resolved'}">${isOngoing?'Ongoing':'Resolved'}</span>`;
+  document.getElementById('pc-meta').innerHTML = `
+    <div class="meta-item"><label>Start</label><span>${ae.start}</span></div>
+    <div class="meta-item"><label>End</label><span>${ae.end||'—'}</span></div>
+    <div class="meta-item"><label>Duration</label><span>${dur}d${isOngoing?' (ongoing)':''}</span></div>
+    <div class="meta-item"><label>Patient</label><span>${pt.id} · ${pt.gender[0].toUpperCase()}/${pt.age}</span></div>`;
+
+  const overlapping = [];
+  Object.entries(pt.drugs).forEach(([cat, drugs]) => {
+    drugs.forEach(drug => {
+      const ds = new Date(drug.s), de = new Date(drug.e);
+      const ae_e = aeEnd || TODAY;
+      if (ds <= ae_e && de >= aeStart) overlapping.push({...drug, cat});
+    });
+  });
+  document.getElementById('pc-cm-count').textContent = `${overlapping.length} medication${overlapping.length!==1?'s':''} active during this event`;
+
+  const list = document.getElementById('pc-cm-list');
+  if (overlapping.length === 0) {
+    list.innerHTML = '<div class="no-cm">No overlapping medications</div>';
+  } else {
+    list.innerHTML = overlapping.map(cm => {
+      const ds = new Date(cm.s), de = new Date(cm.e);
+      const dsOff = Math.max(0,(ds-RANGE_START)/RANGE_MS*100);
+      const deOff = Math.min(100,(de-RANGE_START)/RANGE_MS*100);
+      const aeSOff = Math.max(0,(aeStart-RANGE_START)/RANGE_MS*100);
+      const aeEOff = Math.min(100,((aeEnd||TODAY)-RANGE_START)/RANGE_MS*100);
+      const oS = Math.max(dsOff,aeSOff), oE = Math.min(deOff,aeEOff);
+      const col = CAT_COLORS[cm.cat];
+      return `<div class="cm-card" onclick="highlightDrugFromPanel('${cm.cat}','${cm.name}')">
+        <div class="cm-cat-dot" style="background:${col}"></div>
+        <div class="cm-card-info">
+          <div class="cm-card-name">${cm.name}</div>
+          <div class="cm-card-meta">${cm.s} → ${cm.e}</div>
+          <div class="cm-card-cat">${CAT_LABELS[cm.cat]}</div>
+          <div class="cm-timeline-bar">
+            <div class="cm-timeline-fill" style="left:${dsOff}%;width:${deOff-dsOff}%;background:${col}"></div>
+            <div class="cm-overlap-fill" style="left:${oS}%;width:${oE-oS}%"></div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const totalCMs = Object.values(pt.drugs).reduce((s,d)=>s+d.length,0);
+  document.getElementById('pc-stats').innerHTML = `
+    <div class="stat-item"><div class="stat-val">${pt.aes.length}</div><div class="stat-label">AEs</div></div>
+    <div class="stat-item"><div class="stat-val">${overlapping.length}</div><div class="stat-label">CM Overlap</div></div>
+    <div class="stat-item"><div class="stat-val">${dur}</div><div class="stat-label">Days</div></div>
+    <div class="stat-item"><div class="stat-val">${totalCMs}</div><div class="stat-label">Meds</div></div>`;
+}
+
+function highlightDrugFromPanel(cat, name) {
+  currentHighlightedDrug = {cat, name};
+  highlightAEsForDrug(cat, name);
+  setActiveChip(cat);
+}
+
+// ── Rail ──
+function onChipClick(cat) {
+  if (activeChipCat === cat) {
+    activeChipCat = null;
+    document.getElementById('drugPopup').style.display = 'none';
+    document.querySelectorAll('.drug-chip').forEach(c => c.classList.remove('inactive','active'));
+    clearHighlights(); return;
+  }
+  activeChipCat = cat;
+  setActiveChip(cat);
+  showDrugPopup(cat);
+}
+function setActiveChip(cat) {
+  document.querySelectorAll('.drug-chip').forEach(c => {
+    c.classList.toggle('inactive', c.dataset.cat !== cat);
+    c.classList.toggle('active', c.dataset.cat === cat);
+  });
+}
+function showDrugPopup(cat) {
+  const pt = PATIENTS[currentPatientIdx];
+  const popup = document.getElementById('drugPopup');
+  popup.innerHTML = `<h4>${CAT_LABELS[cat]}</h4>` +
+    pt.drugs[cat].map(d => `<div class="drug-popup-item" onclick="selectDrug('${cat}','${d.name}',this)">${d.name}<span>${d.s} → ${d.e}</span></div>`).join('');
+  const chips = document.querySelectorAll('.drug-chip');
+  let top = 120;
+  chips.forEach(c => { if(c.dataset.cat===cat) top = c.getBoundingClientRect().top - document.getElementById('main')?.getBoundingClientRect().top || 120; });
+  popup.style.top = Math.max(10,top) + 'px';
+  popup.style.display = 'block';
+}
+function selectDrug(cat, name, el) {
+  document.querySelectorAll('.drug-popup-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  currentHighlightedDrug = {cat, name};
+  highlightAEsForDrug(cat, name);
+}
+function highlightAEsForDrug(cat, name) {
+  const pt = PATIENTS[currentPatientIdx];
+  const drug = pt.drugs[cat]?.find(d => d.name === name);
+  if (!drug) return;
+  const ds = new Date(drug.s), de = new Date(drug.e);
+  document.querySelectorAll('.ae-group').forEach(g => {
+    const idx = parseInt(g.dataset.idx);
+    const ae = pt.aes[idx];
+    const as = new Date(ae.start), ae2 = ae.end ? new Date(ae.end) : TODAY;
+    g.querySelector('.highlight-ring').classList.toggle('active', ds <= ae2 && de >= as);
+  });
+}
+function clearHighlights() {
+  document.querySelectorAll('.highlight-ring').forEach(r => r.classList.remove('active'));
+  currentHighlightedDrug = null;
+}
+
+// ── Timeline ──
+const slider = document.getElementById('timeline');
+function sliderDate() { return new Date(RANGE_START.getTime() + RANGE_MS * (slider.value/100)); }
+function updateDateDisplay() { document.getElementById('dateDisplay').textContent = sliderDate().toISOString().split('T')[0]; }
+slider.addEventListener('input', () => {
+  updateDateDisplay();
+  const cur = sliderDate();
+  document.querySelectorAll('.ae-group').forEach(g => {
+    const idx = parseInt(g.dataset.idx);
+    const ae = PATIENTS[currentPatientIdx].aes[idx];
+    if (!ae) return;
+    const as = new Date(ae.start), ae2 = ae.end ? new Date(ae.end) : new Date('2026-12-31');
+    const active = as <= cur && cur <= ae2;
+    g.querySelector('.ae-core').classList.toggle('hidden', !active);
+    g.querySelector('.status-ring').classList.toggle('ghost', !active);
+    g.querySelector('.highlight-ring').classList.toggle('ghost', !active);
+  });
+});
+
+// ══════════════════ TRIAL VIEW ══════════════════
+function renderTrialView() {
+  // Aggregate AEs by term and gender
+  const maleAEs = {}, femaleAEs = {};
+  let totalAEs = 0, totalOngoing = 0;
+
+  PATIENTS.forEach(pt => {
+    const bucket = pt.gender === 'male' ? maleAEs : femaleAEs;
+    pt.aes.forEach(ae => {
+      totalAEs++;
+      if (!ae.end || new Date(ae.end) > TODAY) totalOngoing++;
+      if (!bucket[ae.term]) bucket[ae.term] = {term:ae.term, x:ae.x, y:ae.y, mild:0, moderate:0, severe:0, total:0};
+      bucket[ae.term][ae.severity]++;
+      bucket[ae.term].total++;
+    });
+  });
+
+  document.getElementById('trial-ae-total').textContent = totalAEs;
+  document.getElementById('trial-ae-ongoing').textContent = totalOngoing;
+
+  const malePts = PATIENTS.filter(p=>p.gender==='male');
+  const femalePts = PATIENTS.filter(p=>p.gender==='female');
+  const maleAECount = malePts.reduce((s,p)=>s+p.aes.length,0);
+  const femaleAECount = femalePts.reduce((s,p)=>s+p.aes.length,0);
+
+  document.getElementById('male-sub').textContent = `${malePts.length} patients · ${maleAECount} AEs`;
+  document.getElementById('female-sub').textContent = `${femalePts.length} patients · ${femaleAECount} AEs`;
+
+  renderTrialSilhouette('trialAEMale', maleAEs, malePts.length);
+  renderTrialSilhouette('trialAEFemale', femaleAEs, femalePts.length);
+}
+
+function renderTrialSilhouette(containerId, aeBucket, nPatients) {
+  const cont = document.getElementById(containerId);
+  cont.innerHTML = '';
+  const allAEs = Object.values(aeBucket);
+  if (allAEs.length === 0) return;
+  const maxTotal = Math.max(...allAEs.map(a => a.total));
+
+  // Scale coordinates from patient view (700x820) to trial view (400x820)
+  // patient body centre is ~370x370; trial body centre is ~200x370
+  const scaleX = (x) => (x / 700) * 400;
+  const scaleY = (y) => y; // y is same
+
+  allAEs.forEach(ae => {
+    const cx = scaleX(ae.x);
+    const cy = scaleY(ae.y);
+    const r = 6 + (ae.total / maxTotal) * 10; // radius 6-16 based on frequency
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.style.cursor = 'pointer';
+
+    // Background circle (total size)
+    const bg = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    bg.setAttribute('cx',cx); bg.setAttribute('cy',cy); bg.setAttribute('r',r);
+    bg.setAttribute('fill','rgba(255,255,255,0.06)');
+    bg.setAttribute('stroke','rgba(255,255,255,0.1)');
+    bg.setAttribute('stroke-width','0.5');
+    g.appendChild(bg);
+
+    // Severity pie slices
+    drawPie(g, cx, cy, r, ae);
+
+    // Count label
+    if (ae.total > 1) {
+      const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+      txt.setAttribute('x', cx); txt.setAttribute('y', cy + 3);
+      txt.setAttribute('text-anchor','middle');
+      txt.setAttribute('font-size','7');
+      txt.setAttribute('font-family','DM Mono, monospace');
+      txt.setAttribute('fill','rgba(255,255,255,0.8)');
+      txt.textContent = ae.total;
+      g.appendChild(txt);
+    }
+
+    // Hover events
+    g.addEventListener('mouseenter', e => showTrialTooltip(e, ae));
+    g.addEventListener('mousemove', e => moveTrialTooltip(e));
+    g.addEventListener('mouseleave', hideTrialTooltip);
+
+    cont.appendChild(g);
+  });
+}
+
+function drawPie(g, cx, cy, r, ae) {
+  const sevOrder = ['severe','moderate','mild'];
+  const total = ae.mild + ae.moderate + ae.severe;
+  if (total === 0) return;
+
+  // If only one severity, just fill a circle
+  if ([ae.mild>0, ae.moderate>0, ae.severe>0].filter(Boolean).length === 1) {
+    const sev = ae.severe > 0 ? 'severe' : ae.moderate > 0 ? 'moderate' : 'mild';
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx',cx); circle.setAttribute('cy',cy); circle.setAttribute('r',r);
+    circle.setAttribute('fill', SEV_COLORS[sev]); circle.setAttribute('opacity','0.85');
+    g.appendChild(circle); return;
+  }
+
+  let startAngle = -Math.PI / 2;
+  sevOrder.forEach(sev => {
+    const count = ae[sev];
+    if (count === 0) return;
+    const angle = (count / total) * 2 * Math.PI;
+    const endAngle = startAngle + angle;
+    const x1 = cx + r * Math.cos(startAngle);
+    const y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle);
+    const y2 = cy + r * Math.sin(endAngle);
+    const largeArc = angle > Math.PI ? 1 : 0;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', `M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc},1 ${x2},${y2} Z`);
+    path.setAttribute('fill', SEV_COLORS[sev]);
+    path.setAttribute('opacity','0.85');
+    g.appendChild(path);
+    startAngle = endAngle;
+  });
+}
+
+// Trial tooltip
+const trialTT = document.getElementById('trialTooltip');
+function showTrialTooltip(e, ae) {
+  document.getElementById('ttt-name').textContent = ae.term;
+  const rows = ['severe','moderate','mild'].filter(s => ae[s]>0).map(s =>
+    `<div class="tt-sev-row">
+      <div class="tt-sev-dot" style="background:${SEV_COLORS[s]}"></div>
+      <span>${s.charAt(0).toUpperCase()+s.slice(1)}</span>
+      <span class="tt-count">${ae[s]} patient${ae[s]>1?'s':''}</span>
+    </div>`
+  ).join('');
+  document.getElementById('ttt-rows').innerHTML = rows +
+    `<div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:5px;padding-top:5px;font-size:10px;color:var(--text-dim);">Total: <strong style="color:var(--text)">${ae.total}</strong> occurrence${ae.total>1?'s':''}</div>`;
+  trialTT.classList.add('visible');
+  moveTrialTooltip(e);
+}
+function moveTrialTooltip(e) {
+  trialTT.style.left = (e.clientX + 14) + 'px';
+  trialTT.style.top = (e.clientY - 14) + 'px';
+}
+function hideTrialTooltip() { trialTT.classList.remove('visible'); }
+
+// ══════════════════ RESET / INIT ══════════════════
+function resetPanelState() {
+  slider.value = 100; updateDateDisplay();
+  document.querySelectorAll('.ae-core').forEach(c => c.classList.remove('hidden'));
+  document.querySelectorAll('.status-ring').forEach(r => r.classList.remove('ghost'));
+  document.querySelectorAll('.highlight-ring').forEach(r => r.classList.remove('active','ghost'));
+  document.getElementById('drugPopup').style.display = 'none';
+  document.getElementById('panel-empty').style.display = 'flex';
+  document.getElementById('panel-content').style.display = 'none';
+  activeChipCat = null; currentHighlightedDrug = null;
+}
+function toggleTheme() {
+  const isLight = document.documentElement.classList.toggle('light');
+  document.getElementById('themeBtn').textContent = isLight ? '☽' : '☀︎';
+}
+
+function resetAll() {
+  resetPanelState();
+  if (currentView === 'patient') renderPatientView();
+}
+
+document.getElementById('canvas').addEventListener('click', () => {
+  document.getElementById('drugPopup').style.display = 'none';
+});
+
+// ── Zoom / Pan ──
+let scale=1, tx=0, ty=0, dragging=false, lastX=0, lastY=0;
+const vp = document.getElementById('viewport');
+const svg = document.getElementById('svg');
+function zoom(f) { scale=Math.max(0.4,Math.min(4,scale*f)); applyT(); }
+function applyT() { vp.setAttribute('transform',`translate(${tx},${ty}) scale(${scale})`); }
+svg.addEventListener('mousedown', e => { dragging=true; lastX=e.clientX; lastY=e.clientY; svg.classList.add('grabbing'); });
+window.addEventListener('mousemove', e => { if(!dragging)return; tx+=(e.clientX-lastX)/scale; ty+=(e.clientY-lastY)/scale; lastX=e.clientX; lastY=e.clientY; applyT(); });
+window.addEventListener('mouseup', () => { dragging=false; svg.classList.remove('grabbing'); });
+
+// ── Boot ──
+renderPatientView();
+updateDateDisplay();
+</script>
+</body>
+</html>
